@@ -1,0 +1,52 @@
+# Specify the docker image to use (only used if using docker runners)
+# Using custom made image stored in the nptool registry on gitlab in2p3
+image: gitlab-registry.in2p3.fr/np/nptool:gitlabci-nptool-ubuntu19.04
+
+stages:
+  - build-NPLib
+  - build-NPSimulation
+  - test
+
+building-NPLib:
+ stage: build-NPLib
+ script:
+  - source /root_install/bin/thisroot.sh
+  - source /geant4_install/share/Geant4-10.5.1/geant4make/geant4make.sh
+  - source nptool.sh
+  - cd $NPTOOL/NPLib 
+  - cmake -GNinja ./
+  - ninja install 
+ artifacts:
+  paths:
+    - NPLib/lib
+    - NPLib/include
+    - NPLib/bin
+    - NPLib/ClassList.txt
+    - NPLib/NPLibConfig.cmake
+  expire_in: 1 hour
+  
+building-NPSimulation:
+ stage: build-NPSimulation
+ script:
+  - source /root_install/bin/thisroot.sh
+  - source /geant4_install/share/Geant4-10.5.1/geant4make/geant4make.sh
+  - source nptool.sh
+  - cd $NPTOOL/NPSimulation 
+  - cmake -GNinja ./
+  - ninja install 
+ artifacts:
+  paths:
+    - NPSimulation/lib
+    - NPSimulation/include
+    - NPSimulation/bin
+    - NPSimulation/ressources
+  expire_in: 1 hour
+
+testing:
+ stage: test
+ script:
+  - source /root_install/bin/thisroot.sh
+  - source /geant4_install/share/Geant4-10.5.1/geant4make/geant4make.sh
+  - source nptool.sh
+  - $NPTOOL/NPLib/scripts/RootLogon.sh 
+  - $NPTOOL/NPLib/scripts/test/all.sh
